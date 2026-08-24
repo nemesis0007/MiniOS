@@ -16,14 +16,14 @@ jobs:
 
     steps:
       - name: Check out source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Install kernel toolchain
         run: |
           sudo apt-get update
           sudo apt-get install -y \
             build-essential gcc-multilib grub-pc-bin grub-common \
-            xorriso qemu-system-x86
+            mtools xorriso qemu-system-x86
 
       - name: Build and validate kernel
         run: |
@@ -37,7 +37,7 @@ jobs:
         run: make browser-image
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 24
           cache: npm
@@ -52,7 +52,7 @@ jobs:
         run: npm test
 
       - name: Upload bootable ISO
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: minios-iso
           path: build/minios.iso
