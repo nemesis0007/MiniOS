@@ -1,0 +1,59 @@
+name: MiniOS CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Install kernel toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential gcc-multilib grub-pc-bin grub-common \
+            xorriso qemu-system-x86
+
+      - name: Build and validate kernel
+        run: |
+          make clean
+          make check
+
+      - name: Run QEMU integration suite
+        run: make test
+
+      - name: Prepare browser image
+        run: make browser-image
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: browser/package-lock.json
+
+      - name: Install browser dependencies
+        working-directory: browser
+        run: npm ci
+
+      - name: Build and test browser lab
+        working-directory: browser
+        run: npm test
+
+      - name: Upload bootable ISO
+        uses: actions/upload-artifact@v4
+        with:
+          name: minios-iso
+          path: build/minios.iso
+          retention-days: 14
